@@ -15,22 +15,24 @@ La empresa busca una solución que permita reconocer a los empleados mediante un
 Para llevar a cabo este proyecto, se utilizará la metodología de programación "Pair Programming". Dos personas trabajarán simultáneamente, una como Piloto (escribiendo código) y la otra como Copiloto (supervisando en tiempo real). Se intercambiarán los roles cada hora, y al final de cada sesión, se realizará un commit del trabajo desde la cuenta de GitHub del Piloto.
 
 ---
+# Proyecto Reconocimiento Facial
 
-## Plazos
+## Descripción
+Este proyecto implementa un sistema de reconocimiento facial utilizando machine learning.
 
-El jefe espera ver las propuestas de solución el día 21 de Diciembre.
+## Estructura del Repositorio
+- **data:** Contiene datos, como imágenes de caras y no caras.
+- **models:** Almacena modelos preentrenados.
+- **src:** Contiene el código fuente del proyecto.
+  - `main.py`: Script principal para ejecutar el reconocimiento facial en tiempo real.
+- **tests:** Directorio para pruebas unitarias.
+- **README.md:** Documentación del proyecto.
+- **requirements.txt:** Lista de dependencias necesarias.
 
----
-
-## Condiciones de Entrega
-
-**Para el día de la reunión (21 de Diciembre):**
-- Un Speech con demostración de la solución en 10 minutos.
-
-**Para el día siguiente a la reunión (22 de Diciembre):**
-- Una presentación de código explicando la solución implementada y defendiendo por qué es la mejor dadas las condiciones.
-
-**NOTA:** Se evaluará la calidad y claridad del código entregado.
+## Instrucciones de Ejecución
+1. Instala las dependencias: `pip install -r requirements.txt`
+2. Asegúrate de estar en el directorio principal del proyecto.
+3. Ejecuta el script principal: `python src/main.py`
 
 ---
 
@@ -62,4 +64,3 @@ El jefe espera ver las propuestas de solución el día 21 de Diciembre.
 - Guardar imágenes de cada persona detectada para mejorar el entrenamiento futuro.
 - Ampliación de funcionalidades con otros modelos de machine learning en el pipeline.
 
-**Se solicita que todos los modelos añadidos al pipeline sean configurables para su uso o no.**
