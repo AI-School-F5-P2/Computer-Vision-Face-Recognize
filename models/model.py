@@ -34,4 +34,4 @@ train_generator = train_datagen.flow_from_directory(
 modelo.fit(train_generator, epochs=10, steps_per_epoch=len(train_generator))
 
 # Guardar el modelo entrenado
-modelo.save('models/modelo_reconocimiento.py')
+modelo.save('models/modelo_reconocimiento.h5')

@@ -1,3 +1,5 @@
+# Se necesita la versión 3.8 de Python para que se ejecute correctamente
 opencv-python
 mtcnn
 tensorflow
+pillow

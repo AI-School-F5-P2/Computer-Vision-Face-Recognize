@@ -6,12 +6,15 @@ from mtcnn.mtcnn import MTCNN
 from tensorflow.keras.models import load_model
 import numpy as np
 
+# Crear la variable global root
+root = tk.Tk()
+root.title("Sistema de Reconocimiento Facial")
+
 # Cargar modelo de detección facial
 detector = MTCNN()
 
-# Cargar modelo de reconocimiento facial (FaceNet, por ejemplo)
-# Asegúrate de que esta línea apunta al modelo correcto
-model = load_model('models/modelo_reconocimiento.py')
+# Cargar modelo de reconocimiento facial
+model = load_model('models/modelo_reconocimiento.h5')
 
 def preprocess(img):
     # Preprocesar la imagen para que coincida con el modelo de reconocimiento facial
@@ -21,54 +24,54 @@ def preprocess(img):
     img = np.expand_dims(img, axis=0)
     return img
 
-def clasificar(features):
-    # Función de clasificación basada en las características extraídas por el modelo
-    # Ajusta esta función según las necesidades y el modelo que estás utilizando
-    # Aquí simplemente devolvemos 'Desconocido' como ejemplo
-    return 'Desconocido'
-
-def calcular_confianza(resultados):
-    # Función para calcular la confianza
-    # Ajusta esta función según las necesidades y el modelo que estás utilizando
-    # Aquí simplemente devolvemos un valor arbitrario del 95%
-    return 0.95
-
-def detectar_caras(imagen):
-    # Utilizar MTCNN para detectar caras
-    result = detector.detect_faces(imagen)
-    return result
-
 def reconocer_cara(cara):
     # Preprocesar la cara y realizar la clasificación
-    # Asumiendo que el modelo devuelve un vector de características
-    # y un nombre asociado
-    # (Este código es un ejemplo y debe ajustarse según el modelo utilizado)
     cara = preprocess(cara)
     features = model.predict(cara)
-    nombre = clasificar(features)
-    return nombre
+
+    # Ajustar el umbral según tus necesidades
+    umbral = 0.5
+
+    # La salida del modelo es una probabilidad, aquí usamos un umbral para la clasificación binaria
+    if features[0, 0] > umbral:
+        return 'ACCESO PERMITIDO'
+    else:
+        return 'ACCESO DENEGADO'
 
 def mostrar_resultados(imagen, resultados):
     for resultado in resultados:
         x, y, w, h = resultado['box']
         cara = imagen[y:y+h, x:x+w]
-        nombre = reconocer_cara(cara)
-        porcentaje_confianza = calcular_confianza(resultados)  # Ajustar según el modelo utilizado
+        resultado_reconocimiento = reconocer_cara(cara)
+
+        # Cambia el color del bounding box a rojo si el acceso es denegado
+        color = (0, 255, 0)  # Verde por defecto para ACCESO PERMITIDO
+        if resultado_reconocimiento == 'ACCESO DENEGADO':
+            color = (0, 0, 255)  # Rojo para ACCESO DENEGADO
 
         # Mostrar resultados en la imagen
-        cv2.rectangle(imagen, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        cv2.putText(imagen, f'{nombre} - {porcentaje_confianza:.2%}', (x, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.rectangle(imagen, (x, y), (x+w, y+h), color, 2)
+        cv2.putText(imagen, f'{resultado_reconocimiento}', (x, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     cv2.imshow('Reconocimiento Facial', imagen)
     cv2.waitKey(1)  # Cambiado de 0 a 1 para permitir la detección en tiempo real
 
+
+# Función para detectar caras usando MTCNN
+def detectar_caras(imagen):
+    result = detector.detect_faces(imagen)
+    return result
+
+# Cambiar la función iniciar_deteccion para que llame a mostrar_resultados
 def iniciar_deteccion():
     cap = cv2.VideoCapture(0)
     while True:
         ret, frame = cap.read()
         caras = detectar_caras(frame)
         mostrar_resultados(frame, caras)
+        root.update_idletasks()
+        root.update()
 
     cap.release()
     cv2.destroyAllWindows()
@@ -76,10 +79,6 @@ def iniciar_deteccion():
 def abrir_interfaz_registro():
     # Ejecutar el script face_registration_interface.py
     subprocess.run(["python", "src/face_registration_interface.py"])
-
-# Interfaz gráfica
-root = tk.Tk()
-root.title("Sistema de Reconocimiento Facial")
 
 # Botones
 inicio_button = ttk.Button(root, text="INICIO", command=iniciar_deteccion)
