@@ -1,99 +1,63 @@
-# src/face_registration_interface.py
-import tkinter as tk
-from tkinter import Label
-from PIL import Image, ImageTk
-import cv2
 import os
+import cv2
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-class FaceRegistrationApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Registro de Caras")
+# Crear un modelo de reconocimiento facial
+modelo = Sequential()
+modelo.add(Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)))
+modelo.add(MaxPooling2D(2, 2))
+modelo.add(Dropout(0.25))  # Capa Dropout para regularización
+modelo.add(Conv2D(64, (3, 3), activation='relu'))
+modelo.add(MaxPooling2D(2, 2))
+modelo.add(Conv2D(128, (3, 3), activation='relu'))
+modelo.add(MaxPooling2D(2, 2))
+modelo.add(Conv2D(128, (3, 3), activation='relu'))
+modelo.add(MaxPooling2D(2, 2))
+modelo.add(Flatten())
+modelo.add(Dense(512, activation='relu'))
+modelo.add(Dropout(0.5))  # Capa Dropout para regularización
+modelo.add(Dense(1, activation='sigmoid'))
 
-        self.name_label = tk.Label(root, text="Nombre:")
-        self.name_label.pack()
+# Cambios para clasificación binaria
+modelo.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-        self.name_entry = tk.Entry(root)
-        self.name_entry.pack()
+# Crear generadores de datos para entrenamiento con aumentación
+train_datagen = ImageDataGenerator(
+    rescale=1./255,
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True
+)
 
-        self.start_button = tk.Button(root, text="Iniciar Captura", command=self.start_capture)
-        self.start_button.pack()
+# Directorio donde se encuentran las carpetas de cada usuario registrado
+base_directory = 'data/directorio_de_imagenes/Rodrigo'
 
-        self.capture = None
-        self.image_counter = 0
-        self.folder_path = None
+# Obtener la lista de nombres de usuarios registrados
+usuarios_registrados = os.listdir(base_directory)
 
-        self.capture_button = tk.Button(root, text="Tomar Captura", command=self.capture_and_register)
-        self.capture_button.pack()
-        self.capture_button['state'] = 'disabled'  # Deshabilitar hasta que se inicie la captura
+# Cambios para clasificación binaria
+for usuario in usuarios_registrados:
+    usuario_directory = os.path.join(base_directory, usuario)
+    
+    # Verificar que sea un directorio
+    if os.path.isdir(usuario_directory):
+        print(f'Entrenando con imágenes de {usuario}')
+        
+        train_generator = train_datagen.flow_from_directory(
+            usuario_directory,
+            target_size=(150, 150),
+            batch_size=32,
+            class_mode='binary'  # Cambiado a 'binary' para clasificación binaria
+        )
 
-        self.message_label = Label(root, text="")
-        self.message_label.pack()
+        # Entrenar el modelo con las imágenes del usuario actual
+        modelo.fit(train_generator, epochs=10, steps_per_epoch=len(train_generator))
 
-        self.camera_label = Label(root)
-        self.camera_label.pack()
-
-    def start_capture(self):
-        name = self.name_entry.get().strip()
-        if name:
-            # Obtener el nombre de la carpeta y el número actual de capturas
-            self.folder_path = os.path.join('..', 'data', 'directorio_de_imagenes', name)
-            os.makedirs(self.folder_path, exist_ok=True)
-
-            # Buscar el último número de captura en la carpeta
-            existing_files = os.listdir(self.folder_path)
-            existing_numbers = [int(file.split('.')[0]) for file in existing_files if file.endswith('.jpg')]
-            self.image_counter = max(existing_numbers, default=-1) + 1
-
-            self.capture = cv2.VideoCapture(0)
-            self.show_camera_preview()
-            self.start_button['state'] = 'disabled'
-            self.capture_button['state'] = 'normal'
-            self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        else:
-            print('Por favor, ingresa un nombre antes de iniciar la captura.')
-
-    def show_camera_preview(self):
-        ret, frame = self.capture.read()
-        if ret:
-            # Convertir el frame de OpenCV a formato de imagen
-            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(img)
-            img = ImageTk.PhotoImage(img)
-
-            # Actualizar la etiqueta con la nueva imagen
-            self.camera_label.img = img
-            self.camera_label.config(image=img)
-
-            self.root.after(10, self.show_camera_preview)
-        else:
-            print('Error al capturar imagen.')
-
-    def on_closing(self):
-        if self.capture is not None:
-            self.capture.release()
-            cv2.destroyAllWindows()
-
-        self.root.destroy()
-
-    def capture_and_register(self):
-        ret, frame = self.capture.read()
-        if ret:
-            file_path = os.path.join(self.folder_path, f'{self.image_counter}.jpg')
-            cv2.imwrite(file_path, frame)
-            print(f'Imagen guardada en {file_path}')
-            self.image_counter += 1
-
-            # Mostrar mensaje de registro exitoso
-            self.message_label.config(text="Registrado", fg="green")
-            self.root.after(2000, self.clear_message)  # Limpiar el mensaje después de 2 segundos
-
-    def clear_message(self):
-        self.message_label.config(text="")
-
-    def main(self):
-        self.root.mainloop()
-
-if __name__ == "__main__":
-    app = FaceRegistrationApp(tk.Tk())
-    app.main()
+# Guardar el modelo entrenado
+modelo.save('models/modelo_reconocimiento.keras')
