@@ -48,7 +48,7 @@ class FaceRegistrationApp:
     def start_capture(self):
         name = self.name_entry.get().strip()
         if name:
-            self.folder_path = os.path.join('..','COMPUTER-VISION' ,'data', 'directorio_de_imagenes', name)
+            self.folder_path = os.path.join('data', 'directorio_de_imagenes', name)
             os.makedirs(self.folder_path, exist_ok=True)
 
             existing_files = os.listdir(self.folder_path)
