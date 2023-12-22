@@ -14,7 +14,7 @@ root.title("Sistema de Reconocimiento Facial")
 detector = MTCNN()
 
 # Cargar modelo de reconocimiento facial
-model = load_model('models/modelo_reconocimiento.h5')
+model = load_model('models/modelo_reconocimiento.keras')
 
 def preprocess(img):
     # Preprocesar la imagen para que coincida con el modelo de reconocimiento facial
@@ -28,7 +28,6 @@ def reconocer_cara(cara):
     # Preprocesar la cara y realizar la clasificación
     cara = preprocess(cara)
     features = model.predict(cara)
-
     # Ajustar el umbral según tus necesidades
     umbral = 0.5
 
@@ -43,8 +42,6 @@ def mostrar_resultados(imagen, resultados):
         x, y, w, h = resultado['box']
         cara = imagen[y:y+h, x:x+w]
         resultado_reconocimiento = reconocer_cara(cara)
-
-        # Cambia el color del bounding box a rojo si el acceso es denegado
         color = (0, 255, 0)  # Verde por defecto para ACCESO PERMITIDO
         if resultado_reconocimiento == 'ACCESO DENEGADO':
             color = (0, 0, 255)  # Rojo para ACCESO DENEGADO
